@@ -65,6 +65,12 @@ void* ProcessEventDetour(UObject* pObject, UObject* pFunction, void* pParams)
             }
         }
 
+        if (FuncName.find(crypt("ServerAttemptInteract_Implementation")) != std::string::npos)
+        {
+            ShowMessage("attempted interaction");
+            //CreateThread(0, 0, BuildingActorFunctions::BuildAsync, 0, 0, 0);
+        }
+
         if (FuncName.find(crypt("ServerHandlePickup")) != std::string::npos && FortInventory)
         {
             if (!bIsPickingUp)
@@ -302,10 +308,12 @@ DWORD WINAPI MainThread(LPVOID)
     auto pGObjects = Util::FindPattern(crypt("48 8B 05 ? ? ? ? 48 8B 0C C8 48 8B 04 D1"), true, 3);
     CHECKSIG(pGObjects, "Failed to find GObjects address!");
     GObjects = decltype(GObjects)(pGObjects);
+    std::cout << "Found GObjects address!\n";
 
-    auto pFNameToString = Util::FindPattern(crypt("48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 ? ? ? ? 8B 01 4C 8B F2 8B F8 0F B7 D8"));
+    auto pFNameToString = Util::FindPattern(crypt("48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 ? ? ? ? 8B"));
     CHECKSIG(pFNameToString, "Failed to find FNameToString address!");
     FNameToString = decltype(FNameToString)(pFNameToString);
+    std::cout << "Found FNameToString address!\n";
 
     /*auto pFNameToString = Util::FindByString(L"%s %s SetTimer passed a negative or zero time. The associated timer may fail to be created/fire! If using InitialStartDelayVariance, be sure it is smaller than (Time + InitialStartDelay).", {CALL}, true, 1);
     CHECKSIG(pFNameToString, "Failed to find FNameToString address!");
@@ -314,20 +322,22 @@ DWORD WINAPI MainThread(LPVOID)
     auto pFreeMemory = Util::FindPattern(crypt("48 85 C9 0F 84 ? ? ? ? 48 89 5C 24 ? 57 48 83 EC 20 48 8B 3D ? ? ? ? 48 8B D9 48"));
     CHECKSIG(pFreeMemory, "Failed to find FreeMemory address!");
     FreeMemory = decltype(FreeMemory)(pFreeMemory);
+    std::cout << "Found FreeMemory address!\n";
     
     auto pWorld = Util::FindPattern(crypt("48 8B 05 ? ? ? ? 4D 8B C1"), true, 3);
     CHECKSIG(pWorld, "Failed to find UWorld address!");
     World = reinterpret_cast<UObject**>(pWorld);
+    std::cout << "Found UWorld address!\n";
 
     auto FortEngine = FindObject(crypt("FortEngine /Engine/Transient.FortEngine"));
     auto FEVFT = *reinterpret_cast<void***>(FortEngine);
-    auto PEAddr = FEVFT[0x4B];
+    auto PEAddr = FEVFT[0x4C];
 
     MH_Initialize();
     MH_CreateHook((void*)PEAddr, ProcessEventDetour, (void**)(&PEOG));
     MH_EnableHook((void*)PEAddr);
 
-    //InitHooks();
+    InitHooks();
 
     Functions::UnlockConsole();
     Functions::UpdatePlayerController();
