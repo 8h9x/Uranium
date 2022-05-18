@@ -319,7 +319,7 @@ DWORD WINAPI MainThread(LPVOID)
     CHECKSIG(pFNameToString, "Failed to find FNameToString address!");
     FNameToString = decltype(FNameToString)(pFNameToString);*/
 
-    auto pFreeMemory = Util::FindPattern(crypt("48 85 C9 0F 84 ? ? ? ? 48 89 5C 24 ? 57 48 83 EC 20 48 8B 3D ? ? ? ? 48 8B D9 48"));
+    auto pFreeMemory = Util::FindPattern(crypt("48 85 C9 0F 84 ? ? ? ? 53 48 83 EC 20 48 89 7C 24 ? 48 8B D9 48 8B 3D ? ? ? ? 48 85 FF"));
     CHECKSIG(pFreeMemory, "Failed to find FreeMemory address!");
     FreeMemory = decltype(FreeMemory)(pFreeMemory);
     std::cout << "Found FreeMemory address!\n";
