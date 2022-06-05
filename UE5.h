@@ -14,6 +14,8 @@
 
 struct UObject;
 
+static inline void* (*ProcessEventO)(void*, void*, void*);
+
 static UObject* StaticLoadObject(UObject* Class, UObject* InOuter, const TCHAR* Name, const TCHAR* FileName = nullptr, uint32_t LoadFlags = 0, void* Sandbox = nullptr, bool bAllowObjectReconciliation = false, void* InstancingContext = nullptr)
 {
 	auto staticloadobjectaddr = Util::FindPattern(crypt("48 8B C4 48 89 58 08 4C 89 48 20 4C 89 40 18 48 89 50 10 55 56 57 41 54 41 55 41 56 41 57 48 8B EC 48 83 EC 70 33 FF 48 8D 05 ? ? ? ? 40 38 3D ? ? ? ? 4C 8B F9 49 8B D0 48 8D 4D E0 48 0F 45 C7 49 8B D8 48 89 45 D0 E8 ? ? ? ? 48 8D 15 ? ? ? ? 48 8B CB 8B F7"));
@@ -934,10 +936,7 @@ static DWORD FindOffset(std::string ClassName, std::string VarName)
 }
 
 inline bool ProcessEvent(UObject* pObject, UObject* pFunction, void* pParams) {
-	auto vtable = *reinterpret_cast<void***>(pObject);
-	auto ProcesseventVtable = static_cast<void(*)(void*, void*, void*)>(vtable[0x4C]); if (!ProcesseventVtable) return false;
-	ProcesseventVtable(pObject, pFunction, pParams);
-	return true;
+	return ProcessEventO(pObject, pFunction, pParams);
 }
 
 enum class EGameplayEffectDurationType : uint8_t

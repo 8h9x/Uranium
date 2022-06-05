@@ -310,14 +310,10 @@ DWORD WINAPI MainThread(LPVOID)
     GObjects = decltype(GObjects)(pGObjects);
     std::cout << "Found GObjects address!\n";
 
-    auto pFNameToString = Util::FindPattern(crypt("48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 ? ? ? ? 8B"));
+    auto pFNameToString = Util::FindByString(L"%s %s SetTimer passed a negative or zero time. The associated timer may fail to be created/fire! If using InitialStartDelayVariance, be sure it is smaller than (Time + InitialStartDelay).", {CALL}, true, 1);
     CHECKSIG(pFNameToString, "Failed to find FNameToString address!");
     FNameToString = decltype(FNameToString)(pFNameToString);
     std::cout << "Found FNameToString address!\n";
-
-    /*auto pFNameToString = Util::FindByString(L"%s %s SetTimer passed a negative or zero time. The associated timer may fail to be created/fire! If using InitialStartDelayVariance, be sure it is smaller than (Time + InitialStartDelay).", {CALL}, true, 1);
-    CHECKSIG(pFNameToString, "Failed to find FNameToString address!");
-    FNameToString = decltype(FNameToString)(pFNameToString);*/
 
     auto pFreeMemory = Util::FindPattern(crypt("48 85 C9 0F 84 ? ? ? ? 53 48 83 EC 20 48 89 7C 24 ? 48 8B D9 48 8B 3D ? ? ? ? 48 85 FF"));
     CHECKSIG(pFreeMemory, "Failed to find FreeMemory address!");
@@ -331,11 +327,13 @@ DWORD WINAPI MainThread(LPVOID)
 
     auto FortEngine = FindObject(crypt("FortEngine /Engine/Transient.FortEngine"));
     auto FEVFT = *reinterpret_cast<void***>(FortEngine);
-    auto PEAddr = FEVFT[0x4C];
+    auto pProcessEvent = Util::FindPattern("40 55 56 57 41 54 41 55 41 56 41 57 48 81 EC ? ? ? ? 48 8D 6C 24 ? 48 89 9D ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C5 48 89 85 ? ? ? ? 45");
+
+    ProcessEventO = decltype(ProcessEventO)(pProcessEvent);
 
     MH_Initialize();
-    MH_CreateHook((void*)PEAddr, ProcessEventDetour, (void**)(&PEOG));
-    MH_EnableHook((void*)PEAddr);
+    MH_CreateHook((PVOID)pProcessEvent, ProcessEventDetour, (PVOID*)&PEOG);
+    MH_EnableHook((PVOID)pProcessEvent);
 
     InitHooks();
 
