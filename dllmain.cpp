@@ -315,7 +315,7 @@ DWORD WINAPI MainThread(LPVOID)
     FNameToString = decltype(FNameToString)(pFNameToString);
     std::cout << "Found FNameToString address!\n";
 
-    auto pFreeMemory = Util::FindPattern(crypt("48 85 C9 0F 84 ? ? ? ? 53 48 83 EC 20 48 89 7C 24 ? 48 8B D9 48 8B 3D ? ? ? ? 48 85 FF"));
+    auto pFreeMemory = Util::FindPattern(crypt("48 85 C9 0F 84 ? ? ? ? 53 48 83 EC 20 48 89 7C 24 30 48 8B D9 48 8B 3D ? ? ? ? 48 85 FF 0F 84 ? ? ? ? 48 8B 07 4C 8B 40 30 48 8D 05 ? ? ? ? 4C 3B C0"));
     CHECKSIG(pFreeMemory, "Failed to find FreeMemory address!");
     FreeMemory = decltype(FreeMemory)(pFreeMemory);
     std::cout << "Found FreeMemory address!\n";
@@ -327,13 +327,11 @@ DWORD WINAPI MainThread(LPVOID)
 
     auto FortEngine = FindObject(crypt("FortEngine /Engine/Transient.FortEngine"));
     auto FEVFT = *reinterpret_cast<void***>(FortEngine);
-    auto pProcessEvent = Util::FindPattern("40 55 56 57 41 54 41 55 41 56 41 57 48 81 EC ? ? ? ? 48 8D 6C 24 ? 48 89 9D ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C5 48 89 85 ? ? ? ? 45");
-
-    ProcessEventO = decltype(ProcessEventO)(pProcessEvent);
+    auto PEAddr = FEVFT[0x4C];
 
     MH_Initialize();
-    MH_CreateHook((PVOID)pProcessEvent, ProcessEventDetour, (PVOID*)&PEOG);
-    MH_EnableHook((PVOID)pProcessEvent);
+    MH_CreateHook((void*)PEAddr, ProcessEventDetour, (void**)(&PEOG));
+    MH_EnableHook((void*)PEAddr);
 
     InitHooks();
 
